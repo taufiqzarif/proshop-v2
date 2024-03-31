@@ -8,9 +8,10 @@ import {
   useGetOrderDetailsQuery,
   usePayOrderMutation,
   useGetPaypalClientIdQuery,
+  useDeliverOrderMutation,
 } from "../slices/ordersApiSlice";
 import { toast } from "react-toastify";
-// import { useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 const OrderScreen = () => {
   const { id: orderId } = useParams();
@@ -24,6 +25,8 @@ const OrderScreen = () => {
 
   const [payOrder, { isLoading: isPayLoading }] = usePayOrderMutation();
 
+  const [deliverOrder, { isLoading: isDeliverLoading }] = useDeliverOrderMutation();
+
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
 
   const {
@@ -32,7 +35,7 @@ const OrderScreen = () => {
     error: errorPaypal,
   } = useGetPaypalClientIdQuery();
 
-  // const { userInfo } = useSelector((state) => state.auth);
+  const { userInfo } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (!errorPaypal && !isPayPalLoading && paypal.clientId) {
@@ -89,6 +92,16 @@ const OrderScreen = () => {
   const onError = (error) => {
     toast.error(error.message);
   };
+
+  const handleDeliverOrder = async () => {
+    try {
+      await deliverOrder(orderId);
+      refetch();
+      toast.success("Order delivered");
+    } catch (error) {
+      toast.error(error?.data.message || error.message);
+    }
+  }
 
   return isLoading ? (
     <Loader />
@@ -222,6 +235,19 @@ const OrderScreen = () => {
                       </div>
                     </div>
                   )}
+                </ListGroup.Item>
+              )}
+
+              {isDeliverLoading && <Loader />}
+              {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
+                <ListGroup.Item>
+                  <Button
+                    type="button"
+                    className="btn btn-block"
+                    onClick={handleDeliverOrder}
+                  >
+                    Mark As Delivered
+                  </Button>
                 </ListGroup.Item>
               )}
             </ListGroup>
