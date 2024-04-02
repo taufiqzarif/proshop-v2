@@ -25,7 +25,8 @@ const OrderScreen = () => {
 
   const [payOrder, { isLoading: isPayLoading }] = usePayOrderMutation();
 
-  const [deliverOrder, { isLoading: isDeliverLoading }] = useDeliverOrderMutation();
+  const [deliverOrder, { isLoading: isDeliverLoading }] =
+    useDeliverOrderMutation();
 
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
 
@@ -60,7 +61,7 @@ const OrderScreen = () => {
   const onApprove = (data, actions) => {
     return actions.order.capture().then(async function (details) {
       try {
-        await payOrder({ orderId, details });
+        await payOrder({ orderId, details }).unwrap();
         refetch();
         toast.success("Payment successful");
       } catch (error) {
@@ -76,17 +77,19 @@ const OrderScreen = () => {
   };
 
   const createOrder = (data, actions) => {
-    return actions.order.create({
-      purchase_units: [
-        {
-          amount: {
-            value: order.totalPrice,
+    return actions.order
+      .create({
+        purchase_units: [
+          {
+            amount: {
+              value: order.totalPrice,
+            },
           },
-        },
-      ],
-    }).then((orderId) => {
-      return orderId;
-    });
+        ],
+      })
+      .then((orderId) => {
+        return orderId;
+      });
   };
 
   const onError = (error) => {
@@ -101,7 +104,7 @@ const OrderScreen = () => {
     } catch (error) {
       toast.error(error?.data.message || error.message);
     }
-  }
+  };
 
   return isLoading ? (
     <Loader />
@@ -239,17 +242,20 @@ const OrderScreen = () => {
               )}
 
               {isDeliverLoading && <Loader />}
-              {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
-                <ListGroup.Item>
-                  <Button
-                    type="button"
-                    className="btn btn-block"
-                    onClick={handleDeliverOrder}
-                  >
-                    Mark As Delivered
-                  </Button>
-                </ListGroup.Item>
-              )}
+              {userInfo &&
+                userInfo.isAdmin &&
+                order.isPaid &&
+                !order.isDelivered && (
+                  <ListGroup.Item>
+                    <Button
+                      type="button"
+                      className="btn btn-block"
+                      onClick={handleDeliverOrder}
+                    >
+                      Mark As Delivered
+                    </Button>
+                  </ListGroup.Item>
+                )}
             </ListGroup>
           </Card>
         </Col>
