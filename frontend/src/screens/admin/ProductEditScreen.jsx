@@ -138,6 +138,7 @@ const ProductEditScreen = () => {
                 disabled={isUploadLoading}
               />
             </Form.Group>
+            {isUploadLoading && <Loader />}
             <Form.Group controlId="brand">
               <Form.Label>Brand</Form.Label>
               <Form.Control
